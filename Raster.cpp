@@ -34,9 +34,9 @@ void Raster::clear(const Color& pFillColor) {
 }
 
 void Raster::writeToPPM() const {
-    std::ofstream outFile("FRAME_BUFFER.ppm");
+    ofstream outFile("FRAME_BUFFER.ppm");
     if (!outFile) {
-        std::cerr << "Error opening file for writing: FRAME_BUFFER.ppm" << std::endl;
+        cerr << "Error opening file for writing: FRAME_BUFFER.ppm" << endl;
         return;
     }
     outFile << "P3\n" << width << " " << height << "\n255\n";
@@ -60,7 +60,7 @@ void Raster::swap(float& a, float& b) {
 void Raster::drawLine_DDA_Interpolated(float x1, float y1, float x2, float y2, Color color1, Color color2) {
     float dx = x2 - x1;
     float dy = y2 - y1;
-    float steps = std::max(std::abs(dx), std::abs(dy));
+    float steps = max(abs(dx), abs(dy));
 
     float xIncrement = dx / steps;
     float yIncrement = dy / steps;
@@ -75,8 +75,8 @@ void Raster::drawLine_DDA_Interpolated(float x1, float y1, float x2, float y2, C
     Vector2 currentColor(color1.red, color1.green);
 
     for (int i = 0; i <= steps; ++i) {
-        int roundedX = std::round(x);
-        int roundedY = std::round(y);
+        int roundedX = round(x);
+        int roundedY = round(y);
         
         if (roundedX >= 0 && roundedX < width && roundedY >= 0 && roundedY < height) {
             Color interpolatedColor(currentColor.x, currentColor.y, color1.blue);
@@ -94,7 +94,7 @@ void Raster::drawLine_DDA(float x1, float y1, float x2, float y2, const Color& f
     float dx = x2 - x1;
     float dy = y2 - y1;
 
-    if (std::abs(dx) > std::abs(dy)) {
+    if (abs(dx) > abs(dy)) {
         // Line is more horizontal than vertical
         if (x2 < x1) {
             swap(x1, x2);
@@ -103,7 +103,7 @@ void Raster::drawLine_DDA(float x1, float y1, float x2, float y2, const Color& f
         float m = dy / dx;
         float y = y1;
         for (float x = x1; x <= x2; x += 1.0f) {
-            setColorPixel(std::round(x), std::round(y), fillColor);
+            setColorPixel(round(x), round(y), fillColor);
             y += m;
         }
     } else {
@@ -115,7 +115,7 @@ void Raster::drawLine_DDA(float x1, float y1, float x2, float y2, const Color& f
         float m = dx / dy;
         float x = x1;
         for (float y = y1; y <= y2; y += 1.0f) {
-            setColorPixel(std::round(x), std::round(y), fillColor);
+            setColorPixel(round(x), round(y), fillColor);
             x += m;
         }
     }
@@ -124,10 +124,10 @@ void Raster::drawLine_DDA(float x1, float y1, float x2, float y2, const Color& f
 
 void Raster::drawTriangle2D_DotProduct(const Triangle2D& triangle) {
     // Calculate bounding box
-     int minX = std::max(0, static_cast<int>(std::min(std::min(triangle.v1.x, triangle.v2.x), triangle.v3.x)));
-    int minY = std::max(0, static_cast<int>(std::min(std::min(triangle.v1.y, triangle.v2.y), triangle.v3.y)));
-    int maxX = std::min(width - 1, static_cast<int>(std::max(std::max(triangle.v1.x, triangle.v2.x), triangle.v3.x)));
-    int maxY = std::min(height - 1, static_cast<int>(std::max(std::max(triangle.v1.y, triangle.v2.y), triangle.v3.y)));
+     int minX = max(0, static_cast<int>(min(min(triangle.v1.x, triangle.v2.x), triangle.v3.x)));
+    int minY = max(0, static_cast<int>(min(min(triangle.v1.y, triangle.v2.y), triangle.v3.y)));
+    int maxX = min(width - 1, static_cast<int>(max(max(triangle.v1.x, triangle.v2.x), triangle.v3.x)));
+    int maxY = min(height - 1, static_cast<int>(max(max(triangle.v1.y, triangle.v2.y), triangle.v3.y)));
 
     // Calculate edge vectors
     Vector2 edge1 = triangle.v2 - triangle.v1;
@@ -157,10 +157,10 @@ void Raster::drawTriangle2D_DotProduct(const Triangle2D& triangle) {
 }
 void Raster::drawTriangle_Barycentric(const Triangle3D& T) {
     // Calculate bounding box
-    int minX = std::max(0, static_cast<int>(std::min(std::min(T.v1.x, T.v2.x), T.v3.x)));
-    int minY = std::max(0, static_cast<int>(std::min(std::min(T.v1.y, T.v2.y), T.v3.y)));
-    int maxX = std::min(width - 1, static_cast<int>(std::max(std::max(T.v1.x, T.v2.x), T.v3.x)));
-    int maxY = std::min(height - 1, static_cast<int>(std::max(std::max(T.v1.y, T.v2.y), T.v3.y)));
+    int minX = max(0, static_cast<int>(min(min(T.v1.x, T.v2.x), T.v3.x)));
+    int minY = max(0, static_cast<int>(min(min(T.v1.y, T.v2.y), T.v3.y)));
+    int maxX = min(width - 1, static_cast<int>(max(max(T.v1.x, T.v2.x), T.v3.x)));
+    int maxY = min(height - 1, static_cast<int>(max(max(T.v1.y, T.v2.y), T.v3.y)));
 
     // Iterate over the bounding box
     for (int y = minY; y <= maxY; ++y) {

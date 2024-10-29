@@ -22,6 +22,3 @@ void Triangle2D::calculateBarycentricCoordinates(const Vector2 &P, float &lambda
     lambda3 = 1.0f - lambda1 - lambda2;
 }
 
-Triangle2D::Triangle2D(const Triangle3D &tri3D)
-    : v1(tri3D.v1.x, tri3D.v1.y), v2(tri3D.v2.x, tri3D.v2.y), v3(tri3D.v3.x, tri3D.v3.y),
-      c1(tri3D.c1), c2(tri3D.c2), c3(tri3D.c3) {}

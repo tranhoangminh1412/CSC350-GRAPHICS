@@ -19,7 +19,7 @@ Vector2 Vector2::operator-(const Vector2& other) const {
 }
 
 float Vector2::magnitude() const {
-    return std::sqrt(x*x + y*y);
+    return sqrt(x*x + y*y);
 }
 
 float Vector2::dot(const Vector2& other) const {

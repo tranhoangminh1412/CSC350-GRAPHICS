@@ -15,7 +15,6 @@ struct Triangle2D {
                const Color& c1, const Color& c2, const Color& c3);
     Triangle2D(const Triangle3D& tri3D);
 
-    // Method for Part 5 (we'll implement this later)
     void calculateBarycentricCoordinates(const Vector2& P, float& lambda1, float& lambda2, float& lambda3) const;
 };
 

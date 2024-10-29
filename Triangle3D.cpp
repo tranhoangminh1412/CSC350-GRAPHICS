@@ -7,16 +7,13 @@
 
 using namespace std;
 
-// Default constructor
 Triangle3D :: Triangle3D() : v1(0, 0, 0, 1), v2(0, 0, 0, 1), v3(0, 0, 0, 1),
                c1(White), c2(White), c3(White) {}
 
-// Parameterized constructor
 Triangle3D :: Triangle3D(const Vector4 &pV1, const Vector4 &pV2, const Vector4 &pV3,
            const Color &pC1, const Color &pC2, const Color &pC3)
     : v1(pV1), v2(pV2), v3(pV3), c1(pC1), c2(pC2), c3(pC3) {}
 
-// Transform method
 void Triangle3D :: transform(const Matrix4 &matrix)
 {
     v1 = matrix * v1;

@@ -7,45 +7,39 @@
 #include <stdexcept>
 #include <vector>
 
-// Default constructor is handled by = default in Model.h
 
 Model::Model() {};
 
-// Accessor for const objects (read-only)
 Triangle3D Model::operator[](size_t i) const {
     return triangles[i];
 }
 
-// Accessor for non-const objects (read-write)
 Triangle3D& Model::operator[](int i) {
     return triangles[i];
 }
 
-// Returns the number of triangles in the model
 size_t Model::numTriangles() const {
     return triangles.size();
 }
 
-// Applies a transformation matrix to each triangle in the model
 void Model::transform(const Matrix4& matrix) {
     for (auto& triangle : triangles) {
         triangle.transform(matrix);
     }
 }
 
-// Reads model data from an OBJ file and applies the given color to each triangle
-void Model::readFromOBJFile(const std::string& filepath, const Color& color) {
-    std::ifstream file(filepath);
+void Model::readFromOBJFile(const string& filepath, const Color& color) {
+    ifstream file(filepath);
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open OBJ file: " + filepath);
+        throw runtime_error("Could not open OBJ file: " + filepath);
     }
 
-    std::vector<Vector4> vertices; // Store parsed vertices
+    vector<Vector4> vertices; 
 
-    std::string line;
-    while (std::getline(file, line)) {
-        std::istringstream iss(line);
-        std::string prefix;
+    string line;
+    while (getline(file, line)) {
+        istringstream iss(line);
+        string prefix;
         iss >> prefix;
 
         // Process vertex lines
@@ -64,7 +58,6 @@ void Model::readFromOBJFile(const std::string& filepath, const Color& color) {
             Vector4 vertex2 = vertices[v2 - 1];
             Vector4 vertex3 = vertices[v3 - 1];
 
-            // Create a triangle with the specified color and add it to the model
             triangles.emplace_back(vertex1, vertex2, vertex3, color, color, color);
         }
     }
