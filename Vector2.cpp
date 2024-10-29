@@ -1,4 +1,5 @@
 #include "Vector2.h"
+#include "Vector4.h"
 #include <cmath>
 
 Vector2::Vector2() : x(0.0f), y(0.0f) {}
@@ -6,7 +7,7 @@ Vector2::Vector2() : x(0.0f), y(0.0f) {}
 Vector2::Vector2(float x, float y) : x(x), y(y) {}
 
 Vector2 Vector2::operator*(float scalar) const {
-    return Vector2(x * scalar, y * scalar);
+    return Vector2(x * scalar, y * scalar); 
 }
 
 Vector2 Vector2::operator+(const Vector2& other) const {

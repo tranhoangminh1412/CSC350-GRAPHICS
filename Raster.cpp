@@ -155,7 +155,7 @@ void Raster::drawTriangle2D_DotProduct(const Triangle2D& triangle) {
         }
     }
 }
-void Raster::drawTriangle_Barycentric(const Triangle2D& T) {
+void Raster::drawTriangle_Barycentric(const Triangle3D& T) {
     // Calculate bounding box
     int minX = std::max(0, static_cast<int>(std::min(std::min(T.v1.x, T.v2.x), T.v3.x)));
     int minY = std::max(0, static_cast<int>(std::min(std::min(T.v1.y, T.v2.y), T.v3.y)));
@@ -185,4 +185,8 @@ void Raster::drawTriangle_Barycentric(const Triangle2D& T) {
     }
 }
 
-
+void Raster::drawModel(const Model& model) {
+    for (size_t i = 0; i < model.numTriangles(); ++i) {
+        drawTriangle_Barycentric(model[i]);
+    }
+}
