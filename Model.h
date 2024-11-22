@@ -9,13 +9,6 @@
 
 using namespace std;
 
-struct Triangle3D {
-    Vector4 vertices[3]; // Three vertices of the triangle
-    bool shouldDraw;     // Determines if the triangle should be drawn
-
-    Triangle3D();
-};
-
 class Model
 {
 public:

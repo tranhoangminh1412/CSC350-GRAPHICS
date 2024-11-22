@@ -7,8 +7,7 @@
 #include <stdexcept>
 #include <vector>
 
-
-Model::Model() {};
+Model::Model() {}
 
 Triangle3D Model::operator[](size_t i) const {
     return triangles[i];
@@ -22,47 +21,54 @@ size_t Model::numTriangles() const {
     return triangles.size();
 }
 
-Triangle3D::Triangle3D() : shouldDraw(true) {}
-
-// Apply a transformation matrix to all vertices of all triangles
 void Model::transform(const Matrix4& modelMatrix) {
     for (auto& triangle : triangles) {
         if (!triangle.shouldDraw) continue;
 
-        for (int i = 0; i < 3; ++i) {
-            triangle.vertices[i] = modelMatrix * triangle.vertices[i];
-        }
+        // Transform each vertex
+        triangle.v1 = modelMatrix * triangle.v1;
+        triangle.v2 = modelMatrix * triangle.v2;
+        triangle.v3 = modelMatrix * triangle.v3;
     }
 }
 
-// Perform homogeneous division to normalize vertices
 void Model::homogenize() {
     for (auto& triangle : triangles) {
-        for (auto& vertex : triangle.vertices) {
-            if (vertex.w != 0.0f) {
-                vertex.x /= vertex.w;
-                vertex.y /= vertex.w;
-                vertex.z /= vertex.w;
-                vertex.w = 1.0f;
-            }
+        // Normalize each vertex
+        if (triangle.v1.w != 0.0f) {
+            triangle.v1.x /= triangle.v1.w;
+            triangle.v1.y /= triangle.v1.w;
+            triangle.v1.z /= triangle.v1.w;
+            triangle.v1.w = 1.0f;
+        }
+        if (triangle.v2.w != 0.0f) {
+            triangle.v2.x /= triangle.v2.w;
+            triangle.v2.y /= triangle.v2.w;
+            triangle.v2.z /= triangle.v2.w;
+            triangle.v2.w = 1.0f;
+        }
+        if (triangle.v3.w != 0.0f) {
+            triangle.v3.x /= triangle.v3.w;
+            triangle.v3.y /= triangle.v3.w;
+            triangle.v3.z /= triangle.v3.w;
+            triangle.v3.w = 1.0f;
         }
     }
 }
 
-// Perform backface culling
 void Model::performBackfaceCulling(const Vector4& eye, const Vector4& spot) {
     // Calculate the camera's look vector
     Vector4 look = Vector4(spot.x - eye.x, spot.y - eye.y, spot.z - eye.z, 0.0f);
 
     for (auto& triangle : triangles) {
         // Calculate the surface normal
-        Vector4 v1 = triangle.vertices[1] - triangle.vertices[0];
-        Vector4 v2 = triangle.vertices[2] - triangle.vertices[0];
-        Vector4 normal = v1.cross(v2);
+        Vector4 edge1 = triangle.v2 - triangle.v1;
+        Vector4 edge2 = triangle.v3 - triangle.v1;
+        Vector4 normal = edge1.cross(edge2);
 
         // Check if the normal faces the same direction as the look vector
         float dotProduct = normal.dot(look);
-        triangle.shouldDraw = (dotProduct < 0.0f); // Cull back-facing triangles
+        triangle.shouldDraw = (dotProduct < 0.0f); // Set shouldDraw to false for back-facing triangles
     }
 }
 
@@ -72,7 +78,7 @@ void Model::readFromOBJFile(const string& filepath, const Color& color) {
         throw runtime_error("Could not open OBJ file: " + filepath);
     }
 
-    vector<Vector4> vertices; 
+    vector<Vector4> vertices;
 
     string line;
     while (getline(file, line)) {

@@ -10,6 +10,7 @@ using namespace std;
 struct Triangle3D {
     Vector4 v1, v2, v3;
     Color c1, c2, c3;
+    bool shouldDraw;
 
     Triangle3D();
 
@@ -19,6 +20,7 @@ struct Triangle3D {
     void transform(const Matrix4& matrix);
 
     void calculateBarycentricCoordinates(const Vector2& P, float& lambda1, float& lambda2, float& lambda3) const;
+
 };
 
 #endif // TRIANGLE3D_H

@@ -29,6 +29,9 @@ struct Color {
 #define Blue Color(0.0f, 0.0f, 1.0f)
 #define Black Color(0.0f, 0.0f, 0.0f)
 #define White Color(1.0f, 1.0f, 1.0f)
+#define Cyan Color(0.0f, 1.0f, 1.0f)      // Green + Blue
+#define Magenta Color(1.0f, 0.0f, 1.0f)  // Red + Blue
+#define Yellow Color(1.0f, 1.0f, 0.0f)   // Red + Green
 
 #endif // COLOR_H
 

@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include "Triangle2D.h"
+#include "Triangle3D.h"
 
 using namespace std;
 
@@ -71,43 +72,13 @@ void Raster::swap(float& a, float& b) {
     b = temp;
 }
 
-void Raster::drawLine_DDA(float x1, float y1, float x2, float y2, const Color& fillColor) {
-    float dx = x2 - x1;
-    float dy = y2 - y1;
-
-    if (abs(dx) > abs(dy)) {
-        // Line is more horizontal than vertical
-        if (x2 < x1) {
-            swap(x1, x2);
-            swap(y1, y2);
-        }
-        float m = dy / dx;
-        float y = y1;
-        for (float x = x1; x <= x2; x += 1.0f) {
-            setColorPixel(round(x), round(y), fillColor);
-            y += m;
-        }
-    } else {
-        // Line is more vertical than horizontal
-        if (y2 < y1) {
-            swap(x1, x2);
-            swap(y1, y2);
-        }
-        float m = dx / dy;
-        float x = x1;
-        for (float y = y1; y <= y2; y += 1.0f) {
-            setColorPixel(round(x), round(y), fillColor);
-            x += m;
-        }
-    }
-}
-
 void Raster::drawTriangle_Barycentric(const Triangle3D& triangle) {
+
     // Calculate bounding box
-    int minX = max(0, static_cast<int>(min(min(triangle.vertices[0].x, triangle.vertices[1].x), triangle.vertices[2].x)));
-    int minY = max(0, static_cast<int>(min(min(triangle.vertices[0].y, triangle.vertices[1].y), triangle.vertices[2].y)));
-    int maxX = min(width - 1, static_cast<int>(max(max(triangle.vertices[0].x, triangle.vertices[1].x), triangle.vertices[2].x)));
-    int maxY = min(height - 1, static_cast<int>(max(max(triangle.vertices[0].y, triangle.vertices[1].y), triangle.vertices[2].y)));
+    int minX = max(0, static_cast<int>(min({triangle.v1.x, triangle.v2.x, triangle.v3.x})));
+    int minY = max(0, static_cast<int>(min({triangle.v1.y, triangle.v2.y, triangle.v3.y})));
+    int maxX = min(width - 1, static_cast<int>(max({triangle.v1.x, triangle.v2.x, triangle.v3.x})));
+    int maxY = min(height - 1, static_cast<int>(max({triangle.v1.y, triangle.v2.y, triangle.v3.y})));
 
     // Iterate over the bounding box
     for (int y = minY; y <= maxY; ++y) {
@@ -121,9 +92,9 @@ void Raster::drawTriangle_Barycentric(const Triangle3D& triangle) {
             if (lambda1 >= 0 && lambda2 >= 0 && lambda3 >= 0) {
                 // Interpolate depth
                 float interpolatedDepth =
-                    lambda1 * triangle.vertices[0].z +
-                    lambda2 * triangle.vertices[1].z +
-                    lambda3 * triangle.vertices[2].z;
+                    lambda1 * triangle.v1.z +
+                    lambda2 * triangle.v2.z +
+                    lambda3 * triangle.v3.z;
 
                 if (interpolatedDepth < getDepthPixel(x, y)) {
                     // Update depth buffer and color buffer
@@ -131,9 +102,9 @@ void Raster::drawTriangle_Barycentric(const Triangle3D& triangle) {
 
                     // Interpolate color
                     Color interpolatedColor(
-                        lambda1 * triangle.colors[0].red + lambda2 * triangle.colors[1].red + lambda3 * triangle.colors[2].red,
-                        lambda1 * triangle.colors[0].green + lambda2 * triangle.colors[1].green + lambda3 * triangle.colors[2].green,
-                        lambda1 * triangle.colors[0].blue + lambda2 * triangle.colors[1].blue + lambda3 * triangle.colors[2].blue
+                        lambda1 * triangle.c1.red + lambda2 * triangle.c2.red + lambda3 * triangle.c3.red,
+                        lambda1 * triangle.c1.green + lambda2 * triangle.c2.green + lambda3 * triangle.c3.green,
+                        lambda1 * triangle.c1.blue + lambda2 * triangle.c2.blue + lambda3 * triangle.c3.blue
                     );
                     setColorPixel(x, y, interpolatedColor);
                 }
