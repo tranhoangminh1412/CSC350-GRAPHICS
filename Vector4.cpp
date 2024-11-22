@@ -33,3 +33,12 @@ void Vector4::normalize() {
 float Vector4::dot(const Vector4& other) const {
     return x * other.x + y * other.y + z * other.z + w * other.w;
 }
+
+Vector4 Vector4::cross(const Vector4& other) const {
+    return Vector4(
+        y * other.z - z * other.y,
+        z * other.x - x * other.z,
+        x * other.y - y * other.x,
+        0.0f // Resulting vector is not a point, w = 0
+    );
+}

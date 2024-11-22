@@ -21,6 +21,9 @@ struct Vector4 {
     void normalize();
 
     float dot(const Vector4& other) const;
+
+    Vector4 cross(const Vector4& other) const; // Cross product
+
 };
 
 

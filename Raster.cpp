@@ -4,16 +4,21 @@
 #include <algorithm>
 #include <iostream>
 #include "Triangle2D.h"
+
 using namespace std;
-Raster::Raster() : width(0), height(0), pixels(nullptr) {}
+
+Raster::Raster() : width(0), height(0), pixels(nullptr), depthPixels(nullptr) {}
 
 Raster::Raster(int pWidth, int pHeight, const Color& pFillColor) 
-    : width(pWidth), height(pHeight), pixels(new Color[pWidth * pHeight]) {
-    clear(pFillColor);
+    : width(pWidth), height(pHeight), 
+      pixels(new Color[pWidth * pHeight]), 
+      depthPixels(new float[pWidth * pHeight]) {
+    clear(pFillColor, numeric_limits<float>::max());
 }
 
 Raster::~Raster() {
     delete[] pixels;
+    delete[] depthPixels;
 }
 
 int Raster::getWidth() const { return width; }
@@ -27,9 +32,18 @@ void Raster::setColorPixel(int x, int y, const Color& pFillColor) {
     pixels[y * width + x] = pFillColor;
 }
 
-void Raster::clear(const Color& pFillColor) {
+float Raster::getDepthPixel(int x, int y) const {
+    return depthPixels[y * width + x];
+}
+
+void Raster::setDepthPixel(int x, int y, float depth) {
+    depthPixels[y * width + x] = depth;
+}
+
+void Raster::clear(const Color& pFillColor, float depthValue) {
     for (int i = 0; i < width * height; ++i) {
         pixels[i] = pFillColor;
+        depthPixels[i] = depthValue;
     }
 }
 
@@ -56,39 +70,6 @@ void Raster::swap(float& a, float& b) {
     a = b;
     b = temp;
 }
-
-void Raster::drawLine_DDA_Interpolated(float x1, float y1, float x2, float y2, Color color1, Color color2) {
-    float dx = x2 - x1;
-    float dy = y2 - y1;
-    float steps = max(abs(dx), abs(dy));
-
-    float xIncrement = dx / steps;
-    float yIncrement = dy / steps;
-
-    Vector2 colorIncrement(
-        (color2.red - color1.red) / steps,
-        (color2.green - color1.green) / steps
-    );
-
-    float x = x1;
-    float y = y1;
-    Vector2 currentColor(color1.red, color1.green);
-
-    for (int i = 0; i <= steps; ++i) {
-        int roundedX = round(x);
-        int roundedY = round(y);
-        
-        if (roundedX >= 0 && roundedX < width && roundedY >= 0 && roundedY < height) {
-            Color interpolatedColor(currentColor.x, currentColor.y, color1.blue);
-            setColorPixel(roundedX, roundedY, interpolatedColor);
-        }
-
-        x += xIncrement;
-        y += yIncrement;
-        currentColor = currentColor + colorIncrement;
-    }
-}
-
 
 void Raster::drawLine_DDA(float x1, float y1, float x2, float y2, const Color& fillColor) {
     float dx = x2 - x1;
@@ -120,47 +101,13 @@ void Raster::drawLine_DDA(float x1, float y1, float x2, float y2, const Color& f
         }
     }
 }
- 
 
-void Raster::drawTriangle2D_DotProduct(const Triangle2D& triangle) {
+void Raster::drawTriangle_Barycentric(const Triangle3D& triangle) {
     // Calculate bounding box
-     int minX = max(0, static_cast<int>(min(min(triangle.v1.x, triangle.v2.x), triangle.v3.x)));
-    int minY = max(0, static_cast<int>(min(min(triangle.v1.y, triangle.v2.y), triangle.v3.y)));
-    int maxX = min(width - 1, static_cast<int>(max(max(triangle.v1.x, triangle.v2.x), triangle.v3.x)));
-    int maxY = min(height - 1, static_cast<int>(max(max(triangle.v1.y, triangle.v2.y), triangle.v3.y)));
-
-    // Calculate edge vectors
-    Vector2 edge1 = triangle.v2 - triangle.v1;
-    Vector2 edge2 = triangle.v3 - triangle.v2;
-    Vector2 edge3 = triangle.v1 - triangle.v3;
-
-    // Calculate perpendicular vectors
-    Vector2 perp1 = edge1.perpendicular();
-    Vector2 perp2 = edge2.perpendicular();
-    Vector2 perp3 = edge3.perpendicular();
-
-    // Iterate over the bounding box
-    for (int y = minY; y <= maxY; ++y) {
-        for (int x = minX; x <= maxX; ++x) {
-            Vector2 p(x + 0.5f, y + 0.5f);  // Center of the pixel
-
-            Vector2 v1 = p - triangle.v1;
-            Vector2 v2 = p - triangle.v2;
-            Vector2 v3 = p - triangle.v3;
-
-            // Check if the point is inside the triangle
-            if (v1.dot(perp1) <= 0 && v2.dot(perp2) <= 0 && v3.dot(perp3) <= 0) {
-                setColorPixel(x, y, triangle.c1);  // You can change this to interpolate colors if desired
-            }
-        }
-    }
-}
-void Raster::drawTriangle_Barycentric(const Triangle3D& T) {
-    // Calculate bounding box
-    int minX = max(0, static_cast<int>(min(min(T.v1.x, T.v2.x), T.v3.x)));
-    int minY = max(0, static_cast<int>(min(min(T.v1.y, T.v2.y), T.v3.y)));
-    int maxX = min(width - 1, static_cast<int>(max(max(T.v1.x, T.v2.x), T.v3.x)));
-    int maxY = min(height - 1, static_cast<int>(max(max(T.v1.y, T.v2.y), T.v3.y)));
+    int minX = max(0, static_cast<int>(min(min(triangle.vertices[0].x, triangle.vertices[1].x), triangle.vertices[2].x)));
+    int minY = max(0, static_cast<int>(min(min(triangle.vertices[0].y, triangle.vertices[1].y), triangle.vertices[2].y)));
+    int maxX = min(width - 1, static_cast<int>(max(max(triangle.vertices[0].x, triangle.vertices[1].x), triangle.vertices[2].x)));
+    int maxY = min(height - 1, static_cast<int>(max(max(triangle.vertices[0].y, triangle.vertices[1].y), triangle.vertices[2].y)));
 
     // Iterate over the bounding box
     for (int y = minY; y <= maxY; ++y) {
@@ -168,25 +115,37 @@ void Raster::drawTriangle_Barycentric(const Triangle3D& T) {
             Vector2 P(x + 0.5f, y + 0.5f);  // Center of the pixel
 
             float lambda1, lambda2, lambda3;
-            T.calculateBarycentricCoordinates(P, lambda1, lambda2, lambda3);
+            triangle.calculateBarycentricCoordinates(P, lambda1, lambda2, lambda3);
 
             // Check if the point is inside the triangle
             if (lambda1 >= 0 && lambda2 >= 0 && lambda3 >= 0) {
-                // Interpolate color
-                Color interpolatedColor(
-                    lambda1 * T.c1.red + lambda2 * T.c2.red + lambda3 * T.c3.red,
-                    lambda1 * T.c1.green + lambda2 * T.c2.green + lambda3 * T.c3.green,
-                    lambda1 * T.c1.blue + lambda2 * T.c2.blue + lambda3 * T.c3.blue
-                );
+                // Interpolate depth
+                float interpolatedDepth =
+                    lambda1 * triangle.vertices[0].z +
+                    lambda2 * triangle.vertices[1].z +
+                    lambda3 * triangle.vertices[2].z;
 
-                setColorPixel(x, y, interpolatedColor);
+                if (interpolatedDepth < getDepthPixel(x, y)) {
+                    // Update depth buffer and color buffer
+                    setDepthPixel(x, y, interpolatedDepth);
+
+                    // Interpolate color
+                    Color interpolatedColor(
+                        lambda1 * triangle.colors[0].red + lambda2 * triangle.colors[1].red + lambda3 * triangle.colors[2].red,
+                        lambda1 * triangle.colors[0].green + lambda2 * triangle.colors[1].green + lambda3 * triangle.colors[2].green,
+                        lambda1 * triangle.colors[0].blue + lambda2 * triangle.colors[1].blue + lambda3 * triangle.colors[2].blue
+                    );
+                    setColorPixel(x, y, interpolatedColor);
+                }
             }
         }
     }
 }
 
 void Raster::drawModel(const Model& model) {
-    for (size_t i = 0; i < model.numTriangles(); ++i) {
-        drawTriangle_Barycentric(model[i]);
+    for (const auto& triangle : model.triangles) {
+        if (triangle.shouldDraw) {
+            drawTriangle_Barycentric(triangle);
+        }
     }
 }

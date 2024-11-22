@@ -13,6 +13,7 @@ private:
     int width;
     int height;
     Color* pixels;
+    float* depthPixels;
 
 void swap(float& a, float& b);
 
@@ -25,14 +26,15 @@ public:
     int getHeight() const;
     Color getColorPixel(int x, int y) const;
     void setColorPixel(int x, int y, const Color& pFillColor);
-    void clear(const Color& pFillColor);
-      void writeToPPM() const;
+    void clear(const Color& pFillColor, float depth);
+    void writeToPPM() const;
     void drawLine_DDA(float x1, float y1, float x2, float y2, const Color& fillColor);
     void drawLine_DDA_Interpolated(float x1, float y1, float x2, float y2, Color color1, Color color2);
     void drawTriangle_Barycentric(const Triangle3D& T);
     void drawTriangle2D_DotProduct(const Triangle2D& triangle);
     void drawModel(const Model& model);
-
+    float getDepthPixel(int x, int y) const;
+    void setDepthPixel(int x, int y, float depth);
 };
 
 #endif 

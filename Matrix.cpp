@@ -113,3 +113,59 @@ Matrix4 Matrix4::rotate3D(float xDegrees, float yDegrees, float zDegrees)
 
     return rotZ * rotY * rotX;
 }
+
+Matrix4 Matrix4::identity() {
+    return Matrix4();
+}
+
+Matrix4 Matrix4::lookAt(const Vector4& eye, const Vector4& spot, const Vector4& up) {
+    Vector4 forward = Vector4(spot.x - eye.x, spot.y - eye.y, spot.z - eye.z, 0.0f);
+    forward = forward.cross(up);
+    forward = Vector4(forward.x, forward.y, forward.z, 0.0f);
+
+    Vector4 right = forward.cross(up);
+    Vector4 cameraUp = right.cross(forward);
+
+    Matrix4 view;
+    view.m[0][0] = right.x; view.m[0][1] = right.y; view.m[0][2] = right.z; view.m[0][3] = -right.x * eye.x - right.y * eye.y - right.z * eye.z;
+    view.m[1][0] = cameraUp.x; view.m[1][1] = cameraUp.y; view.m[1][2] = cameraUp.z; view.m[1][3] = -cameraUp.x * eye.x - cameraUp.y * eye.y - cameraUp.z * eye.z;
+    view.m[2][0] = forward.x; view.m[2][1] = forward.y; view.m[2][2] = forward.z; view.m[2][3] = -forward.x * eye.x - forward.y * eye.y - forward.z * eye.z;
+    return view;
+}
+
+// Orthographic Matrix
+Matrix4 Matrix4::orthographic(float minX, float maxX, float minY, float maxY, float minZ, float maxZ) {
+    Matrix4 ortho;
+    ortho.m[0][0] = 2.0f / (maxX - minX);
+    ortho.m[1][1] = 2.0f / (maxY - minY);
+    ortho.m[2][2] = -2.0f / (maxZ - minZ);
+    ortho.m[3][0] = -(maxX + minX) / (maxX - minX);
+    ortho.m[3][1] = -(maxY + minY) / (maxY - minY);
+    ortho.m[3][2] = -(maxZ + minZ) / (maxZ - minZ);
+    return ortho;
+}
+
+// Perspective Matrix
+Matrix4 Matrix4::perspective(float fovY, float aspect, float nearZ, float farZ) {
+    Matrix4 persp;
+    float tanHalfFovY = tan(fovY / 2.0f);
+    persp.m[0][0] = 1.0f / (aspect * tanHalfFovY);
+    persp.m[1][1] = 1.0f / tanHalfFovY;
+    persp.m[2][2] = -(farZ + nearZ) / (farZ - nearZ);
+    persp.m[2][3] = -(2.0f * farZ * nearZ) / (farZ - nearZ);
+    persp.m[3][2] = -1.0f;
+    persp.m[3][3] = 0.0f;
+    return persp;
+}
+
+// Viewport Matrix
+Matrix4 Matrix4::viewport(float x, float y, float width, float height) {
+    Matrix4 viewport;
+    viewport.m[0][0] = width / 2.0f;
+    viewport.m[1][1] = height / 2.0f;
+    viewport.m[2][2] = 0.5f;
+    viewport.m[3][0] = x + width / 2.0f;
+    viewport.m[3][1] = y + height / 2.0f;
+    viewport.m[3][2] = 0.5f;
+    return viewport;
+}

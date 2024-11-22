@@ -22,9 +22,47 @@ size_t Model::numTriangles() const {
     return triangles.size();
 }
 
-void Model::transform(const Matrix4& matrix) {
+Triangle3D::Triangle3D() : shouldDraw(true) {}
+
+// Apply a transformation matrix to all vertices of all triangles
+void Model::transform(const Matrix4& modelMatrix) {
     for (auto& triangle : triangles) {
-        triangle.transform(matrix);
+        if (!triangle.shouldDraw) continue;
+
+        for (int i = 0; i < 3; ++i) {
+            triangle.vertices[i] = modelMatrix * triangle.vertices[i];
+        }
+    }
+}
+
+// Perform homogeneous division to normalize vertices
+void Model::homogenize() {
+    for (auto& triangle : triangles) {
+        for (auto& vertex : triangle.vertices) {
+            if (vertex.w != 0.0f) {
+                vertex.x /= vertex.w;
+                vertex.y /= vertex.w;
+                vertex.z /= vertex.w;
+                vertex.w = 1.0f;
+            }
+        }
+    }
+}
+
+// Perform backface culling
+void Model::performBackfaceCulling(const Vector4& eye, const Vector4& spot) {
+    // Calculate the camera's look vector
+    Vector4 look = Vector4(spot.x - eye.x, spot.y - eye.y, spot.z - eye.z, 0.0f);
+
+    for (auto& triangle : triangles) {
+        // Calculate the surface normal
+        Vector4 v1 = triangle.vertices[1] - triangle.vertices[0];
+        Vector4 v2 = triangle.vertices[2] - triangle.vertices[0];
+        Vector4 normal = v1.cross(v2);
+
+        // Check if the normal faces the same direction as the look vector
+        float dotProduct = normal.dot(look);
+        triangle.shouldDraw = (dotProduct < 0.0f); // Cull back-facing triangles
     }
 }
 
