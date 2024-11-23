@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Vector2.h"
 #include "Vector4.h"
 #include "Matrix.h"
@@ -53,7 +54,6 @@ Matrix4 Matrix4::operator*(const Matrix4 &other) const
         iw * other.kx + jw * other.ky + kw * other.kz + ow * other.kw,
         iw * other.ox + jw * other.oy + kw * other.oz + ow * other.ow);
 }
-
 Matrix4 Matrix4::translate3D(float tX, float tY, float tZ)
 {
     return Matrix4(1, 0, 0, tX,
@@ -75,10 +75,11 @@ Matrix4 Matrix4::rotateX3D(float degrees)
     float radians = degrees * M_PI / 180.0f;
     float cosAngle = cos(radians);
     float sinAngle = sin(radians);
-    return Matrix4(1, 0, 0, 0,
-                   0, cosAngle, -sinAngle, 0,
-                   0, sinAngle, cosAngle, 0,
-                   0, 0, 0, 1);
+    return Matrix4(
+        1, 0, 0, 0,
+        0, cosAngle, sinAngle, 0,
+        0, -sinAngle, cosAngle, 0,
+        0, 0, 0, 1);
 }
 
 Matrix4 Matrix4::rotateY3D(float degrees)
@@ -87,9 +88,9 @@ Matrix4 Matrix4::rotateY3D(float degrees)
     float cosAngle = cos(radians);
     float sinAngle = sin(radians);
     return Matrix4(
-        cosAngle, 0, sinAngle, 0,
+        cosAngle, 0, -sinAngle, 0,  // Y-axis rotation
         0, 1, 0, 0,
-        -sinAngle, 0, cosAngle, 0,
+        sinAngle, 0, cosAngle, 0,  // Flip sign on sine for proper rotation
         0, 0, 0, 1);
 }
 
@@ -99,11 +100,12 @@ Matrix4 Matrix4::rotateZ3D(float degrees)
     float cosAngle = cos(radians);
     float sinAngle = sin(radians);
     return Matrix4(
-        cosAngle, -sinAngle, 0, 0,
-        sinAngle, cosAngle, 0, 0,
+        cosAngle, sinAngle, 0, 0,  // Z-axis rotation
+        -sinAngle, cosAngle, 0, 0, // Flip sine to preserve right-hand system
         0, 0, 1, 0,
         0, 0, 0, 1);
 }
+
 
 Matrix4 Matrix4::rotate3D(float xDegrees, float yDegrees, float zDegrees)
 {
@@ -111,61 +113,59 @@ Matrix4 Matrix4::rotate3D(float xDegrees, float yDegrees, float zDegrees)
     Matrix4 rotY = rotateY3D(yDegrees);
     Matrix4 rotZ = rotateZ3D(zDegrees);
 
+    // Combine the rotations in the correct order: Z * Y * X
     return rotZ * rotY * rotX;
 }
 
-Matrix4 Matrix4::identity() {
+Matrix4 Matrix4::identity()
+{
     return Matrix4();
 }
 
-Matrix4 Matrix4::lookAt(const Vector4& eye, const Vector4& spot, const Vector4& up) {
+Matrix4 lookAt(const Vector4 &eye, const Vector4 &spot, const Vector4 &up)
+{
     Vector4 forward = Vector4(spot.x - eye.x, spot.y - eye.y, spot.z - eye.z, 0.0f);
-    forward = forward.cross(up);
-    forward = Vector4(forward.x, forward.y, forward.z, 0.0f);
+    forward.normalize();
 
     Vector4 right = forward.cross(up);
+    right.normalize();
+
     Vector4 cameraUp = right.cross(forward);
+    cameraUp.normalize();
 
-    Matrix4 view;
-    view.m[0][0] = right.x; view.m[0][1] = right.y; view.m[0][2] = right.z; view.m[0][3] = -right.x * eye.x - right.y * eye.y - right.z * eye.z;
-    view.m[1][0] = cameraUp.x; view.m[1][1] = cameraUp.y; view.m[1][2] = cameraUp.z; view.m[1][3] = -cameraUp.x * eye.x - cameraUp.y * eye.y - cameraUp.z * eye.z;
-    view.m[2][0] = forward.x; view.m[2][1] = forward.y; view.m[2][2] = forward.z; view.m[2][3] = -forward.x * eye.x - forward.y * eye.y - forward.z * eye.z;
-    return view;
+    return Matrix4(
+        right.x, right.y, right.z, -right.dot(eye),
+        cameraUp.x, cameraUp.y, cameraUp.z, -cameraUp.dot(eye),
+        -forward.x, -forward.y, -forward.z, forward.dot(eye),
+        0, 0, 0, 1);
 }
 
-// Orthographic Matrix
-Matrix4 Matrix4::orthographic(float minX, float maxX, float minY, float maxY, float minZ, float maxZ) {
-    Matrix4 ortho;
-    ortho.m[0][0] = 2.0f / (maxX - minX);
-    ortho.m[1][1] = 2.0f / (maxY - minY);
-    ortho.m[2][2] = -2.0f / (maxZ - minZ);
-    ortho.m[3][0] = -(maxX + minX) / (maxX - minX);
-    ortho.m[3][1] = -(maxY + minY) / (maxY - minY);
-    ortho.m[3][2] = -(maxZ + minZ) / (maxZ - minZ);
-    return ortho;
+Matrix4 perspective(float fovY, float aspect, float nearZ, float farZ)
+{
+    float radians = fovY * M_PI / 180.0;
+    float tanHalfFovY = tan(radians / 2.0);
+
+    return Matrix4(
+        1.0f / (aspect * tanHalfFovY), 0, 0, 0,
+        0, 1.0f / tanHalfFovY, 0, 0,
+        0, 0, -(farZ + nearZ) / (farZ - nearZ), -(2.0f * farZ * nearZ) / (farZ - nearZ),
+        0, 0, -1, 0);
 }
 
-// Perspective Matrix
-Matrix4 Matrix4::perspective(float fovY, float aspect, float nearZ, float farZ) {
-    Matrix4 persp;
-    float tanHalfFovY = tan(fovY / 2.0f);
-    persp.m[0][0] = 1.0f / (aspect * tanHalfFovY);
-    persp.m[1][1] = 1.0f / tanHalfFovY;
-    persp.m[2][2] = -(farZ + nearZ) / (farZ - nearZ);
-    persp.m[2][3] = -(2.0f * farZ * nearZ) / (farZ - nearZ);
-    persp.m[3][2] = -1.0f;
-    persp.m[3][3] = 0.0f;
-    return persp;
+Matrix4 viewport(float x, float y, float width, float height)
+{
+    return Matrix4(
+        width / 2.0f, 0, 0, x + width / 2.0f,
+        0, height / 2.0f, 0, y + height / 2.0f,
+        0, 0, 0.5f, 0.5f,
+        0, 0, 0, 1);
 }
 
-// Viewport Matrix
-Matrix4 Matrix4::viewport(float x, float y, float width, float height) {
-    Matrix4 viewport;
-    viewport.m[0][0] = width / 2.0f;
-    viewport.m[1][1] = height / 2.0f;
-    viewport.m[2][2] = 0.5f;
-    viewport.m[3][0] = x + width / 2.0f;
-    viewport.m[3][1] = y + height / 2.0f;
-    viewport.m[3][2] = 0.5f;
-    return viewport;
+Matrix4 orthographic(float minX, float maxX, float minY, float maxY, float minZ, float maxZ)
+{
+    return Matrix4(
+        2.0f / (maxX - minX), 0, 0, -(maxX + minX) / (maxX - minX),
+        0, 2.0f / (maxY - minY), 0, -(maxY + minY) / (maxY - minY),
+        0, 0, -2.0f / (maxZ - minZ), -(maxZ + minZ) / (maxZ - minZ),
+        0, 0, 0, 1);
 }

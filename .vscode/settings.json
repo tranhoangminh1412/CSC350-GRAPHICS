@@ -5,6 +5,8 @@
         "iostream": "cpp",
         "sstream": "cpp",
         "iosfwd": "cpp",
-        "stdexcept": "cpp"
+        "stdexcept": "cpp",
+        "cmath": "cpp",
+        "limits": "cpp"
     }
 }
