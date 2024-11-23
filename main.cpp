@@ -93,7 +93,7 @@ int main() {
     Vector4 spot(50, 50, -30, 1); // Target position
     Vector4 up(0, 1, 0, 0); // Up direction
 
-    // Perform backface culling (if applicable in your pipeline)
+    // Perform backface culling 
     teapot.performBackfaceCulling(eye, spot);
 
     // Calculate the View Matrix
