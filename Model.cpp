@@ -68,7 +68,7 @@ void Model::performBackfaceCulling(const Vector4& eye, const Vector4& spot) {
 
         // Check if the normal faces the same direction as the look vector
         float dotProduct = normal.dot(look);
-        triangle.shouldDraw = (dotProduct < 0.0f); // Set shouldDraw to false for back-facing triangles
+        triangle.shouldDraw = (dotProduct > 0.0f); // Set shouldDraw to false for back-facing triangles
     }
 }
 
